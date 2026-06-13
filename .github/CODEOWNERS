@@ -1,0 +1,13 @@
+# V1: Blazor Example + Docker Infrastructure
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global fallback
+*                                       @moServus
+
+# Core abstractions — any change here affects all connectors
+src/SqlSpaExplorer.Core/                @moServus
+
+# Docker infrastructure and CI
+docker/                                 @moServus
+.github/                                @moServus
+setup.ps1                               @moServus

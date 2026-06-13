@@ -1,0 +1,41 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": ["**/*.csproj"],
+          "src": "../src"
+        }
+      ],
+      "dest": "api",
+      "globalNamespaceId": "SqlSpaExplorer"
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": ["**/*.yml", "**/*.md"],
+        "exclude": ["_site/**", "obj/**", "api/"]
+      },
+      {
+        "files": ["api/**.yml", "api/index.md"]
+      }
+    ],
+    "resource": [
+      {
+        "files": ["images/**"]
+      }
+    ],
+    "dest": "_site",
+    "globalMetadata": {
+      "_appName": "SQL SPA Explorer",
+      "_appTitle": "SQL SPA Explorer Docs",
+      "_enableSearch": true,
+      "_gitContribute": {
+        "repo": "https://github.com/moServus/BigDBC",
+        "branch": "main"
+      }
+    },
+    "template": ["default", "modern"]
+  }
+}

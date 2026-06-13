@@ -1,0 +1,5 @@
+# V1: Blazor Example + Docker Infrastructure
+- name: Architecture
+  href: architecture.md
+- name: Infrastructure
+  href: infrastructure.md

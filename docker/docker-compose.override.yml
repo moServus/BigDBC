@@ -1,0 +1,35 @@
+# Dev-time overrides: expose container ports to the Mac host so tools like
+# DBeaver, psql, mongosh, and a browser can connect directly.
+# This file is merged automatically by `docker compose` when present.
+#
+# Port groups:
+#   BigDBC    (402xx) — app metadata store + .NET application
+#   sourcedbs (4xxxx)         — queryable database engines
+
+services:
+
+  # ── BigDBC ────────────────────────────────────────────────────────────────────
+  mongo:
+    ports:
+      - "40217:27017"
+
+  # ── sourcedbs ─────────────────────────────────────────────────────────────────
+  postgres:
+    ports:
+      - "45432:5432"
+
+  sqlserver:
+    ports:
+      - "41433:1433"
+
+  oracle:
+    ports:
+      - "41521:1521"
+
+  exasol:
+    ports:
+      - "48563:8563"
+
+  app:
+    ports:
+      - "42080:8080"

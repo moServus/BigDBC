@@ -1,0 +1,50 @@
+# proto — Prototyping stage
+# BigDBC only: metaMongoDB + SQLite. No source DBs.
+#
+# Usage:
+#   docker compose -f docker/docker-compose.proto.yml up -d
+
+services:
+
+  # ── MongoDB (metaMongoDB) ─────────────────────────────────────────────────────
+  metaMongoDB:
+    container_name: metaMongoDB
+    ports:
+      - "40217:27017"
+    image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: sqlspaexplorer
+    volumes:
+      - mongo_data:/data/db
+      - ./init-scripts/mongo:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── App (bigdbc) ──────────────────────────────────────────────────────────────
+  bigdbc:
+    container_name: bigdbc
+    ports:
+      - "42080:8080"
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Mongo: >-
+        mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@metaMongoDB:27017
+      ConnectionStrings__Sqlite: Data Source=/data/sqlite/sqlspaexplorer.db
+    volumes:
+      - protoSQLite:/data/sqlite
+    depends_on:
+      metaMongoDB:
+        condition: service_healthy
+
+volumes:
+  mongo_data:
+  protoSQLite:

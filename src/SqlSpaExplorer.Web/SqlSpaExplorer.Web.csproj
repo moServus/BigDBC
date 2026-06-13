@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\SqlSpaExplorer.Core\SqlSpaExplorer.Core.csproj" />
+    <ProjectReference Include="..\SqlSpaExplorer.Connectors.Postgres\SqlSpaExplorer.Connectors.Postgres.csproj" />
+    <ProjectReference Include="..\SqlSpaExplorer.Connectors.SqlServer\SqlSpaExplorer.Connectors.SqlServer.csproj" />
+    <ProjectReference Include="..\SqlSpaExplorer.Connectors.Oracle\SqlSpaExplorer.Connectors.Oracle.csproj" />
+    <ProjectReference Include="..\SqlSpaExplorer.Connectors.Sqlite\SqlSpaExplorer.Connectors.Sqlite.csproj" />
+    <ProjectReference Include="..\SqlSpaExplorer.Connectors.Mongo\SqlSpaExplorer.Connectors.Mongo.csproj" />
+    <ProjectReference Include="..\SqlSpaExplorer.Connectors.Exasol\SqlSpaExplorer.Connectors.Exasol.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,163 @@
+# dev — Development / unit test stage
+# BigDBC always starts. Select one source DB with --profile.
+#
+# Usage:
+#   docker compose -f docker/docker-compose.dev.yml --profile pg up -d
+#   docker compose -f docker/docker-compose.dev.yml --profile oracle up -d
+#   docker compose -f docker/docker-compose.dev.yml --profile mssql up -d
+#   docker compose -f docker/docker-compose.dev.yml --profile exasol up -d
+
+services:
+
+  # ── MongoDB (metaMongoDB) — always starts ─────────────────────────────────────
+  metaMongoDB:
+    container_name: metaMongoDB
+    ports:
+      - "40217:27017"
+    image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: sqlspaexplorer
+    volumes:
+      - mongo_data:/data/db
+      - ./init-scripts/mongo:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── App (bigdbc) — always starts ─────────────────────────────────────────────
+  bigdbc:
+    container_name: bigdbc
+    ports:
+      - "42080:8080"
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Postgres: >-
+        Host=postgres;Database=sqlspaexplorer;Username=postgres;Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__SqlServer: >-
+        Server=sqlserver;Database=SqlSpaExplorer;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True
+      ConnectionStrings__Oracle: >-
+        User Id=explorer;Password=${ORACLE_APP_PASSWORD};Data Source=oracle:1521/FREEPDB1
+      ConnectionStrings__Mongo: >-
+        mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@metaMongoDB:27017
+      ConnectionStrings__Exasol: >-
+        Data Source=exasol:8563;User Id=sys;Password=${EXASOL_SYS_PASSWORD}
+      ConnectionStrings__Sqlite: Data Source=/data/sqlite/sqlspaexplorer.db
+    volumes:
+      - devSQLite:/data/sqlite
+    depends_on:
+      metaMongoDB:
+        condition: service_healthy
+        required: true
+      postgres:
+        condition: service_healthy
+        required: false
+      oracle:
+        condition: service_healthy
+        required: false
+      sqlserver:
+        condition: service_healthy
+        required: false
+      exasol:
+        condition: service_healthy
+        required: false
+
+  # ── PostgreSQL — profile: pg ──────────────────────────────────────────────────
+  postgres:
+    container_name: postgres
+    ports:
+      - "45432:5432"
+    image: postgres:16
+    profiles: [pg]
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: sqlspaexplorer
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts/postgres:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── Oracle — profile: oracle ──────────────────────────────────────────────────
+  oracle:
+    container_name: oracle
+    ports:
+      - "41521:1521"
+    image: gvenzl/oracle-free:latest
+    profiles: [oracle]
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD}
+      APP_USER: explorer
+      APP_USER_PASSWORD: ${ORACLE_APP_PASSWORD}
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+      - ./init-scripts/oracle:/container-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 120s
+
+  # ── SQL Server (linux/amd64 — Rosetta) — profile: mssql ──────────────────────
+  sqlserver:
+    container_name: sqlserver
+    ports:
+      - "41433:1433"
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    profiles: [mssql]
+    environment:
+      SA_PASSWORD: ${SA_PASSWORD}
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Express
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - ./init-scripts/sqlserver:/docker-init
+    entrypoint: ["/bin/bash", "/docker-init/entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -Q 'SELECT 1' -C -l 5"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ── Exasol (linux/amd64 — Rosetta) — profile: exasol ────────────────────────
+  exasol:
+    container_name: exasol
+    ports:
+      - "48563:8563"
+    image: exasol/docker-db:latest
+    platform: linux/amd64
+    profiles: [exasol]
+    privileged: true
+    environment:
+      EXA_DB_MEM_LIMIT: ${EXASOL_MEM_LIMIT:-2GiB}
+    volumes:
+      - exasol_data:/exa/data
+      - ./init-scripts/exasol:/docker-init
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8563 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
+
+volumes:
+  mongo_data:
+  devSQLite:
+  postgres_data:
+  oracle_data:
+  sqlserver_data:
+  exasol_data:

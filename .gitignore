@@ -1,0 +1,42 @@
+# Docker secrets — never commit the live .env
+docker/.env
+
+# .NET build output
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+*.swp
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# Entity Framework migrations sqlite cache
+*.db
+*.db-shm
+*.db-wal
+
+# dotnet publish output
+publish/
+out/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# DocFX generated output
+_site/
+
+# Test results
+TestResults/
+coverage/
+*.coveragexml
+*.trx
